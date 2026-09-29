@@ -76,7 +76,7 @@ user_enriched <- user_view %>% left_join(users, by = "user_id") %>%
 write_csv(video_enriched, "temp/video_enriched.csv")
 write_csv(user_enriched, "temp/user_enriched.csv")
 
-# Exercise 4
+# Exercise 4 (THIS FIRST PART IS IMPORTANT AS IT INITIALLY PRODUCED ERRORS FOR A LONG TIME)
 #Build event-level watch_log in steps:
 #1. start from impressions
 #2. left_join(watch_events, by = "impression_id")
@@ -84,10 +84,16 @@ write_csv(user_enriched, "temp/user_enriched.csv")
 #4. left_join(videos, by = c("video_id", "creator_id"))
 #5. left_join(creators, by = "creator_id")
 
-watch_log <- impressions %>% left_join(watch_events, by= "impression_id") %>%
-                  left_join(sessions, by=c("session_id.x" = "session_id", "user_id.x" = "user_id")) %>% %>% %>% %>%
-                  left_join(videos, by=c("video_id.x", "creator_id.x")) %>% %>% %>% %>%
-                  left_join(creators, by= "creator_id")
+watch_log <- impressions %>% left_join(watch_events, 
+  by= c(
+        "impression_id",
+        "session_id",
+        "user_id",
+        "video_id",
+        "creator_id")) %>%
+  left_join(sessions, by=c("session_id", "user_id")) %>% 
+  left_join(videos, by=c("video_id", "creator_id")) %>% 
+  left_join(creators, by= "creator_id")
 
 # From the same data, create: 1. watched_only <- impressions %>% inner_join(watch_events, by ="impression_id")
 #2. creator_event_summary with:
@@ -108,6 +114,18 @@ creator_event_summary <- watched_only %>%
 
 write_csv(watch_log, "temp/watch_log.csv")
 write_csv(creator_event_summary, "temp/creator_event_summary.csv")
+
+
+#TIMESTAMPS: FIRST: timestamp example
+watch_time_preview <- watch_log %>%
+mutate(
+shown_ts = as.POSIXct(shown_at,
+format = "%Y-%m-%dT%H:%M:%SZ",
+tz = "UTC"),
+shown_day = as.Date(shown_ts)
+) %>%
+select(impression_id, creator_id, shown_at, shown_ts, shown_day) %>%
+head(8)
 
 # Exercise 5
 creator_daily <- watch_log %>% 
